@@ -1,5 +1,5 @@
 const {Router}=require("express")
-const {userPost,userLogin, userGet,userUpdate,userDelete, getLogin, getSignUp} = require("../controllers/userController")
+const {userPost,userLogin, userGet,userUpdate,userDelete, getLogin, getSignUp, optGet, passwordReset} = require("../controllers/userController")
 const passport = require("passport")
 const isExists = require("../middlewares/Validate")
 const userRoute=Router()
@@ -21,6 +21,9 @@ userRoute.post("/passportLogin", passport.authenticate("local"), (req, res) => {
 userRoute.get("/login",getLogin)
 userRoute.get("/signup",getSignUp)
 
+// Password reser
+userRoute.post("/otp",optGet)
+userRoute.post("/resetPassword",passwordReset)
 
 
 module.exports=userRoute
