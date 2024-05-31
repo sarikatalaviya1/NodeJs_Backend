@@ -1,5 +1,7 @@
 const User = require("../models/user")
-const bcrypt = require("bcrypt")
+const bcrypt = require("bcrypt");
+const sendMail = require("../service/mail");
+const Product = require("../models/product");
 
 const userPost = async (req, res) => {
 
@@ -26,7 +28,7 @@ const userPost = async (req, res) => {
 
 const userGet = async (req, res) => {
     try {
-        let users = await User.findAll()
+        let users = await User.findAll({include:Product})
         res.send(users)
     } catch (error) {
         res.send(error)
@@ -91,9 +93,47 @@ const userLogin = async (req, res) => {
     res.send(user)
 }
 
+
+// reset Passwword
+let map=new Map()
+
+const optGet=async(req,res)=>{
+    let {email}=req.body;
+    let user=await User.findOne({where:{email}})
+    if(!user){
+        res.send("User Not Found")
+    }
+
+    let otp=Math.round(Math.random()*10000)
+    map.set(email,otp)
+    await sendMail(email,otp)
+    res.send("Otp Sent Successfully")
+}
+
+const passwordReset=async(req,res)=>{
+    let {email,password,otp}=req.body
+        if(map.has(email)){
+           let oldOtp= map.get(email)
+           if(oldOtp===otp){
+            let hashPassword = await bcrypt.hash(password, 10)
+
+                let user=await User.findOne({where:{email}})
+                user.update({password:hashPassword})
+                res.send("Password Updated Successfully")
+           }else{
+            res.send("OTP Not Match")
+           }
+        }else{
+            res.send("Email Not Found")
+        }
+}
+
+
 module.exports = {
     userPost, userGet, userUpdate, userDelete,
     getSignUp,
     getLogin,
-    userLogin
+    userLogin,
+    optGet,
+    passwordReset
 }
